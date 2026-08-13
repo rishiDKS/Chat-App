@@ -1,56 +1,57 @@
 import User from "../model/User.js";
-import { generateToken } from "../../lib/utils.js";
+import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcryptjs";
+import cloudinary from "../lib/cloudinary.js";
 
-export const signup=async (req,res)=>{
-    const {fullName,email,password}=req.body;
-    try{
-        if(!fullName || !email || !password){
-            return res.status(400).json({message:"All fields are required"});
+export const signup = async (req, res) => {
+    const { fullName, email, password } = req.body;
+    try {
+        if (!fullName || !email || !password) {
+            return res.status(400).json({ message: "All fields are required" });
         }
-        if(password.length<6){
-            return res.status(400).json({message:"Password must be at least 6 characters long"});
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
         }
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if(!emailRegex.test(email)){
-            return res.status(400).json({message:"Invalid email format"});
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Invalid email format" });
         }
 
-        const user=await User.findOne({email:email});
-        if(user)return res.status(400).json({message:"Email already exists"});
+        const user = await User.findOne({ email: email });
+        if (user) return res.status(400).json({ message: "Email already exists" });
 
-        const salt=await bcrypt.genSalt(10);
-        const hashedPassword=await bcrypt.hash(password,salt);
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser=new User({
+        const newUser = new User({
             fullName,
             email,
-            password:hashedPassword
+            password: hashedPassword
         });
-        if(newUser){
+        if (newUser) {
             // generateToken(newUser._id,res);
             // await newUser.save();
 
             //Persist the new user then, issue auth cookie
-            const savedUser=await newUser.save();
-            generateToken(savedUser._id,res);
+            const savedUser = await newUser.save();
+            generateToken(savedUser._id, res);
 
             res.status(201).json({
-                id:newUser._id,
-                fullName:newUser.fullName,
-                email:newUser.email,
-                profilePic:newUser.profilePic,
+                id: newUser._id,
+                fullName: newUser.fullName,
+                email: newUser.email,
+                profilePic: newUser.profilePic,
                 // message:"New User created successfully"
             });
             // send a wellcome email to the new user
         }
-        else{
-            res.status(400).json({message:"Invalid user data"});
+        else {
+            res.status(400).json({ message: "Invalid user data" });
         }
     }
-    catch(err){
+    catch (err) {
         console.log("Error in signup controller:", err);
-        res.status(500).json({message:"Internal server error"}); 
+        res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -93,3 +94,23 @@ export const logout=async(_,res)=>{
     });
     res.status(200).json({message:"Logged out successfully"});
 }
+export const updateProfile = async (req, res) => {
+    try {
+        const { profilePic } = req.body;
+        if (!profilePic) return res.status(400).json({ message: "Profile picture is required" });
+
+        const userId = req.user._id;
+        const uploadResponse = await cloudinary.uploader.upload(profilePic);
+
+        const updatedUser = await User.findByIdAndUpdate(userId, 
+            { profilePic: uploadResponse.secure_url }, 
+            { new: true }
+        );
+
+        res.status(200).json(updatedUser);
+    } catch (err) {
+        console.log("Error in updateProfile controller:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+
+};

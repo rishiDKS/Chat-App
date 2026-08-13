@@ -1,5 +1,6 @@
 // const express=require('express');
 import express from "express";
+import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
 dotenv.config();
@@ -11,9 +12,10 @@ const __dirname=path.resolve();
 import authRoutes from "./routes/auth.route.js";
 import messageRoutes from "./routes/message.route.js";
 
-import { connectDB } from "../lib/db.js";
+import { connectDB } from "./lib/db.js";
 
 app.use(express.json()); //req.body
+app.use(cookieParser()); //req.cookies
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages",messageRoutes);
