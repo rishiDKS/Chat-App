@@ -17,7 +17,7 @@ import messageRoutes from "./routes/message.route.js";
 
 import { connectDB } from "./lib/db.js";
 
-app.use(express.json()); //req.body
+app.use(express.json({ limit:"5mb" })); //req.body
 app.use(cors({origin:ENV.CLIENT_URL,credentials:true}));
 app.use(cookieParser()); //req.cookies
 
