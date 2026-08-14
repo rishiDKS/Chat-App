@@ -4,11 +4,12 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
 import cors from "cors";
-import {ENV} from "./lib/env.js";
+import { ENV } from "./lib/env.js";
+import { app, server } from "./lib/socket.js";
 
 dotenv.config();
 const PORT=process.env.PORT || 3000;
-const app=express();
+// const app=express();
 
 const __dirname=path.resolve();
 
@@ -35,7 +36,7 @@ if(process.env.NODE_ENV==="production"){
         res.sendFile(path.join(__dirname,"../frontend/dist/index.html"));
     });
 }
-app.listen(PORT,()=>{
+server.listen(PORT,()=>{
     console.log("Server running on port "+ PORT)
     connectDB()
 });
